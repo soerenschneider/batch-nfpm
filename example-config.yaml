@@ -1,0 +1,12 @@
+builds:
+  artifacts_path: /tmp/batchnfpm
+  clone_path: /tmp/repos
+  nfpm_config:
+    local_path: /tmp/batchnfpm/nfpm-configs
+    fetch_resource: https://gitlab.com/soerenschneider/nfpm-configs.git
+  build_configurations:
+    - hoster: gitlab
+      owner: soerenschneider
+      project: ssh-login-notification
+      commands:
+        - make build

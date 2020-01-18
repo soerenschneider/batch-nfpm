@@ -1,0 +1,7 @@
+repomd
+pyyaml
+backoff
+requests
+GitPython
+packaging
+configargparse
