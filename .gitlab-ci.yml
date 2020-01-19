@@ -10,6 +10,14 @@ test:unit:
   - make venv-test
   - make unittests
 
+test:integration:
+  image: python:3.7-slim-buster
+  stage: test
+  script:
+  - apt-get update && apt-get install -y make git
+  - make venv-test
+  - make integrationtests
+
 build_and_push:
   image: docker:latest
   services:
