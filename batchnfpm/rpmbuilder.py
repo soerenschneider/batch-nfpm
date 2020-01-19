@@ -108,7 +108,7 @@ class PackageBuilder:
         if version and version.lower().startswith("v"):
             return version[1:]
         
-        return None
+        return version
 
     @staticmethod
     def _is_git_tag_newer(git_tag: str, package_version: str):
