@@ -7,6 +7,11 @@ class Test_TestPackageBuilder(unittest.TestCase):
         version = "2.4.1"
         normalized = PackageBuilder._get_normalized_version(f"v{version}")
         self.assertEqual(normalized, version)
+    
+    def test_get_normalized_version_identical(self):
+        version = "2.4.1"
+        normalized = PackageBuilder._get_normalized_version(version)
+        self.assertEqual(normalized, version)
 
     def test_is_git_tag_newer_neg(self):
         git = "2.4.1"
