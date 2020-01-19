@@ -33,9 +33,9 @@ class GitWrapper:
             tag = "master"
 
         if os.path.isdir(local_repo_path):
-            logging.info("Checking out tag %s for %s", tag, repository_url)
+            logging.info("Checkout tag %s and pull for %s", tag, repository_url)
             g = Git(local_repo_path)
-            g.checkout(tag)
+            g.pull('origin', tag)
         else:
             logging.info("Cloning '%s' with tag '%s' to %s", repository_url, tag, local_repo_path)
             Repo.clone_from(repository_url, local_repo_path, branch=tag)
