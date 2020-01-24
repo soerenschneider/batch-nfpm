@@ -20,7 +20,6 @@ class ResourceReader:
             resources = [resource]
 
         for path in resources:
-            logging.info("Trying to read from config %s", path)
             content = ResourceReader.read_from_resource(path)
             if content:
                 try:
