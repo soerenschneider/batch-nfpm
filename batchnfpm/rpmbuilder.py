@@ -27,8 +27,10 @@ class PackageBuilder:
         else:
             logging.info("Using '%s' as remote package repository", rpm_repo)
         self.rpm_repo = rpm_repo
+        self.throw_error = False
+        self.debug = False
 
-    def _find_nfpm_config(self, nfpm_config: NfpmConfig, build_config: BuildConfig) -> str:
+    def _find_nfpm_config(self, nfpm_config: NfpmConfig, build_config: BuildConfig, project_dir: str) -> str:
         owner = build_config.owner
         project = build_config.project
         path = nfpm_config.local_path
@@ -36,16 +38,30 @@ class PackageBuilder:
         if nfpm_config.fetch_resource:
             GitWrapper.checkout(nfpm_config.fetch_resource, nfpm_config.local_path)
         
-        # TODO: enable individual overwriting
-        return os.path.join(path, build_config.host, owner, project, build_config.config_file)
+        config_file_locations = list()
+        config_file_locations.append(os.path.join(path, build_config.host, owner, project, build_config.config_file))
+        config_file_locations.append(os.path.join(project_dir, "nfpm.yaml"))
 
-    @staticmethod
-    def _compile_project(build_config: BuildConfig, working_dir: str) -> bool:
+        for candidate in config_file_locations:
+            if not os.path.exists(candidate):
+                logging.warning("No nfpm config file found at %s", candidate)
+            else:
+                logging.info("Found nfpm config file %s", candidate)
+                return candidate
+
+        return None
+
+    def _evaluate_exitcode(self, return_code: int) -> None:
+        if self.throw_error is True and return_code != 0:
+            raise Exception("Command returned exit code %d", return_code)
+
+    def _compile_project(self, build_config: BuildConfig, working_dir: str) -> bool:
         try:
             for cmd in build_config.get_cmds():
                 logging.info("Executing build command '%s'", cmd)
-                p = subprocess.Popen(cmd, cwd=working_dir)
-                p.wait()
+                p = subprocess.Popen(cmd, cwd=working_dir, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+                exitcode = p.wait()
+                self._evaluate_exitcode(exitcode)
         except Exception as err:
             logging.error("Could not build repo: %s", err)
             return False
@@ -53,12 +69,12 @@ class PackageBuilder:
         return True
 
     def _compile_and_package(self, working_dir: str, build_config: BuildConfig, version: str) -> bool:
-        nfpm_config = self._find_nfpm_config(self.conf.nfpm_config, build_config)
+        nfpm_config = self._find_nfpm_config(self.conf.nfpm_config, build_config, working_dir)
         if not nfpm_config or not os.path.isfile(nfpm_config):
             logging.error(f"No nfpm file '%s' defined for %s/%s", nfpm_config, build_config.owner, build_config.project)
             return False
 
-        build_success = PackageBuilder._compile_project(build_config, working_dir)
+        build_success = self._compile_project(build_config, working_dir)
         if not build_success:
             return False
 
@@ -76,7 +92,7 @@ class PackageBuilder:
             os.environ["MY_APP_VERSION"] = version
             
             package_cmd = ["nfpm", "-f", nfpm_config, "pkg", "-t", package_path]
-            p = subprocess.Popen(package_cmd, cwd=working_dir)
+            p = subprocess.Popen(package_cmd, cwd=working_dir, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             p.wait()
 
     @staticmethod
