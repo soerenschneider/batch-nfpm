@@ -7,11 +7,17 @@ builds:
   build_configurations:
     - hoster: gitlab
       owner: soerenschneider
-      project: serial-sensor-reader
+      project: ssh-login-notification
       buildsteps:
-        - arch: amd64
+        - arch: arm5
+          env:
+            GOARCH: arm
+            GOARM: "5"
           buildsteps:
             - make build
-        - arch: arm
+        - arch: arm5
+          env:
+            GOARCH: arm
+            GOARM: "6"
           buildsteps:
             - make build

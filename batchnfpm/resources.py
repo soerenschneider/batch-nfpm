@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Optional
 from os.path import expanduser
 
 import backoff
@@ -31,7 +32,7 @@ class ResourceReader:
         return None
 
     @staticmethod
-    def read_from_resource(resource: str) -> str:
+    def read_from_resource(resource: str) -> Optional[str]:
         if resource:
             if resource.startswith("http"):
                 return ResourceReader.read_from_http(resource)
@@ -39,8 +40,10 @@ class ResourceReader:
             logging.info("Trying to read config from %s", resource)
             return ResourceReader.read_from_file(resource)
 
+        return None
+
     @staticmethod
-    def read_from_file(path: str):
+    def read_from_file(path: str) -> Optional[str]:
         try:
             with open(path, 'r') as opened:
                 return str(opened.read())

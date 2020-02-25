@@ -94,10 +94,14 @@ class NfpmConfig:
 
 
 class BuildConfig:
-    def __init__(self, commands: list, owner: str, project: str, hoster=None):
-        if not commands:
-            raise ValueError("commands empty")
-        self.commands = commands
+    def __init__(self, builds: list, owner: str, project: str, hoster=None):
+        if not builds:
+            raise ValueError("no buildsteps defined")
+
+        tmp = list()
+        for build in builds:
+            tmp.append(Build.as_payload(build))
+        self.builds = tmp
 
         if not hoster:
             hoster = Hoster.GITHUB
@@ -145,15 +149,15 @@ class BuildConfig:
         return None
 
     def __repr__(self):
-        return f"{self.hoster}: {self.owner}/{self.project}, commands: {self.commands}"
+        return f"{self.hoster}: {self.owner}/{self.project}, builds: {self.builds}"
 
-    def get_cmds(self) -> list:
-        commands = []
-        
-        for cmd in self.commands:
-            commands.append(cmd.split())
-
-        return commands
+    @property
+    def builds(self):
+        return self._builds
+    
+    @builds.setter
+    def builds(self, builds):
+        self._builds = builds
 
     def get_repository_url(self) -> str:
         if Hoster.GITHUB == self.hoster:
@@ -164,9 +168,60 @@ class BuildConfig:
     @staticmethod
     def as_payload(payload):
         return BuildConfig(
-            payload['commands'], 
+            payload['buildsteps'], 
             payload['owner'],
             payload['project'],
             
             hoster=payload['hoster'], 
         )
+
+class Build:
+    def __init__(self, arch: str, buildsteps: list, env: list):
+        if not arch:
+            raise ValueError("missing arch for build")
+        self.arch = arch
+
+        if not buildsteps:
+            raise ValueError("missing buildsteps for build")
+        self.buildsteps = buildsteps
+
+        if not env:
+            env = list()
+        self.env = env
+    
+    @property
+    def env(self):
+        return self._env
+
+    @env.setter
+    def env(self, value):
+        self._env = value
+
+    @property
+    def arch(self):
+        return self._arch
+
+    @arch.setter
+    def arch(self, value):
+        self._arch = value
+
+    @property
+    def buildsteps(self):
+        return self._buildsteps
+
+    @buildsteps.setter
+    def buildsteps(self, steps):
+        self._buildsteps = list()
+        for cmd in steps:
+            self._buildsteps.append(cmd.split())
+
+    def __repr__(self):
+        return f"{self._arch}, {self._buildsteps}"
+
+
+    @staticmethod
+    def as_payload(payload):
+        env = None
+        if 'env' in payload:
+            env = payload['env']
+        return Build(payload['arch'], payload['buildsteps'], env)
