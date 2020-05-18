@@ -33,12 +33,14 @@ class Test_TestPackageBuilder(unittest.TestCase):
 
     def test_get_target_filename_no_version(self):
         project = "prometheus"
-        name = PackageBuilder._get_target_filename(project, "rpm")
-        self.assertEqual(name, "prometheus.rpm")
+        arch = "amd64"
+        name = PackageBuilder._get_target_filename(project, "rpm", arch)
+        self.assertEqual(name, f"prometheus.{arch}.rpm")
 
     def test_get_target_filename_version(self):
         project = "prometheus"
         version = "2.5.1-rc4"
         package_type = "rpm"
-        name = PackageBuilder._get_target_filename(project, package_type)
-        self.assertEqual("prometheus-2.5.1-rc4.rpm", f"{project}-{version}.{package_type}")
+        arch = "amd64"
+        name = PackageBuilder._get_target_filename(project, package_type, arch, version)
+        self.assertEqual(name, f"{project}-{version}.{arch}.{package_type}")
